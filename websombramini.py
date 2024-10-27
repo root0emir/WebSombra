@@ -175,29 +175,66 @@ class WebSombramini:
         except Exception as e:
             logging.error(f"[-] Error checking security headers: {e}")
 
-    def get_subdomains(self):
-        try:
-            subdomains = sublist3r.main(self.domain, 40, None, ports=None, silent=True, verbose=False, enable_bruteforce=False)
-            with self.lock:
-                self.data['Subdomains'] = subdomains
-            logging.info(f"[+] Subdomains: {len(subdomains)} found.")
-        except Exception as e:
-            logging.error(f"[-] Error fetching subdomains: {e}")
-            with self.lock:
-                self.data['Subdomains'] = None
 
-    def scan_open_ports(self):
-        try:
-            scanner = nmap.PortScanner()
-            scanner.scan(self.data['IP Address'], '1-1024')  # Scans ports 1 to 1024
-            open_ports = scanner[self.data['IP Address']].get('tcp')
-            with self.lock:
-                self.data['Open Ports'] = open_ports
-            logging.info("[+] Port scanning completed.")
-        except Exception as e:
-            logging.error(f"[-] Error performing port scan: {e}")
+def get_subdomains(self):
+    try:
+      
+        if not self.domain:
+            logging.error("[-] Domain is not provided.")
+            return
+        
+        
+        logging.info(f"[+] Fetching subdomains for domain: {self.domain}")
+        
+        
+        engines = ['dnsdumpster', 'virustotal']  # Kullanmak istediğiniz motorlar
+        subdomains = sublist3r.main(self.domain, 40, None, ports=None, silent=True, verbose=False, enable_bruteforce=False, engines=engines)
+        
+       
+        with self.lock:
+            self.data['Subdomains'] = subdomains
+        
+        logging.info(f"[+] Subdomains: {len(subdomains)} found.")
+    
+    except Exception as e:
+        logging.error(f"[-] Error fetching subdomains: {e}")
+        with self.lock:
+            self.data['Subdomains'] = None
 
-    def save_data(self):
+
+import nmap
+import logging
+
+def scan_open_ports(self):
+    try:
+        scanner = nmap.PortScanner()
+        
+        ip_address = self.data.get('IP Address')
+        if not ip_address:
+            logging.error("[-] IP Address is not provided.")
+            return
+        
+      
+        logging.info(f"[+] Scanning ports for IP: {ip_address}")
+        scanner.scan(ip_address, '1-1024')  # Scans ports 1 to 1024
+        
+        
+        open_ports = []
+        if 'tcp' in scanner[ip_address]:
+            open_ports = [port for port in scanner[ip_address]['tcp'] if scanner[ip_address]['tcp'][port]['state'] == 'open']
+        
+      
+        with self.lock:
+            self.data['Open Ports'] = open_ports
+        
+        logging.info("[+] Port scanning completed.")
+        logging.info(f"[+] Open Ports: {open_ports}")
+    
+    except Exception as e:
+        logging.error(f"[-] Error performing port scan: {e}")
+
+
+def save_data(self):
         try:
             with open(f"{self.domain}_analysis.json", "w") as json_file:
                 json.dump(self.data, json_file, indent=4)
@@ -205,7 +242,7 @@ class WebSombramini:
         except Exception as e:
             logging.error(f"[-] Error saving data: {e}")
 
-    def run_analysis(self):
+def run_analysis(self):
         logging.info(f"[+] Starting analysis for {self.domain}")
         threads = [
             threading.Thread(target=self.get_ip_address),
