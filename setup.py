@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="websombramini",
-    version="1.0",
+    version="1.2",
     author="[root0emir]",
     description="Web analysis and reconnaissance tool for ethical hackers.",
     long_description=long_description,
