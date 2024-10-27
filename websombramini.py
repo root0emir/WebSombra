@@ -39,7 +39,8 @@ class WebSombramini:
             'Emails Found': None,
             'Security Headers': None,
             'Subdomains': None,
-            'Open Ports': None
+            'Open Ports': None,
+            'PHP Files Found': None  # Added field for PHP files
         }
         self.lock = threading.Lock()  # Lock for thread-safe access to self.data
 
@@ -123,6 +124,22 @@ class WebSombramini:
         except requests.RequestException as e:
             logging.error(f"[-] Error scraping the website: {e}")
 
+    def scrape_php_files(self):
+        try:
+            # Collect links and check for PHP files
+            response = requests.get(self.url, timeout=10)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, 'html.parser')
+                php_files = [link['href'] for link in soup.find_all('a', href=True) if link['href'].endswith('.php')]
+                
+                with self.lock:
+                    self.data['PHP Files Found'] = php_files
+                logging.info(f"[+] PHP Files Found: {len(php_files)} files.")
+            else:
+                logging.warning(f"[-] Failed to retrieve webpage for PHP file scraping, status code: {response.status_code}")
+        except requests.RequestException as e:
+            logging.error(f"[-] Error scraping PHP files: {e}")
+
     def get_whois_info(self):
         try:
             w = whois.whois(self.domain)
@@ -195,6 +212,7 @@ class WebSombramini:
             threading.Thread(target=self.get_dns_records),
             threading.Thread(target=self.get_ssl_info_detailed),
             threading.Thread(target=self.scrape_website),
+            threading.Thread(target=self.scrape_php_files),  # Added PHP file scraping
             threading.Thread(target=self.get_whois_info),
             threading.Thread(target=self.check_security_headers),
             threading.Thread(target=self.get_subdomains),
@@ -206,19 +224,12 @@ class WebSombramini:
             thread.join()
         self.save_data()
 
-def main():
-    parser = argparse.ArgumentParser(description="WebSombramini: Web Analysis and Recon Tool by root0emir")
-    parser.add_argument("domain", help="Target domain to analyze (e.g., example.com)")
-    args = parser.parse_args()
-
-    # Validate domain format
-    if not re.match(r'^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$', args.domain):
-        logging.error("[-] Invalid domain format. Please provide a valid domain (e.g., example.com).")
-        return
-
-    web_sombra = WebSombramini(args.domain)
-    web_sombra.display_banner()
-    web_sombra.run_analysis()
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("domain", help="Enter the domain you want to analyze (e.g., example.com)")
+    args = parser.parse_args()
+    
+    WebSombramini.display_banner()
+    analysis = WebSombramini(args.domain)
+    analysis.run_analysis()
