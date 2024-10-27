@@ -17,17 +17,18 @@ setup(
             'websombramini=websombramini:main',  
         ],
     },
-    install_requires=[
-        "requests>=2.20.0",
-        "dnspython>=2.1.0",
-        "whois>=0.9.13",
-        "nmap>=0.0.1",
-        "beautifulsoup4>=4.6.0",
-        "pyfiglet>=0.8.post1",
-        "sublist3r>=1.0",
-        "matplotlib>=3.3.0",
-        "pandas>=1.1.0"
-    ],
+ install_requires=[
+    "requests>=2.20.0",
+    "dnspython>=2.1.0",
+    "whois>=0.9.13",
+    "python-nmap>=0.6.1",  
+    "beautifulsoup4>=4.6.0",
+    "pyfiglet>=0.8.post1",
+    "sublist3r>=1.0",
+    "matplotlib>=3.3.0",
+    "pandas>=1.1.0"
+],
+
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
