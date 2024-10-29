@@ -1,6 +1,8 @@
 # WebSombraMini
 WebSombraMini is a simple intelligence tool that analyzes the scanned website.
 
+Please remember to install the dependencies listed in the requirements.txt file.
+
  You can run it using the command: 
  cd WebSombraMini 
  python websombramini.py [site url]. 
