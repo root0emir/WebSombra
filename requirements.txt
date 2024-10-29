@@ -1,0 +1,23 @@
+def create_requirements_file():
+    requirements = [
+        "requests",
+        "socket",
+        "ssl",
+        "dnspython",
+        "beautifulsoup4",
+        "whois",
+        "nmap",
+        "pandas",
+        "matplotlib",
+        "pyfiglet",
+        "sublist3r"
+    ]
+    
+    with open('requirements.txt', 'w') as f:
+        for package in requirements:
+            f.write(f"{package}\n")
+    logging.info("[+] requirements.txt file created.")
+
+if __name__ == "__main__":
+    # ... existing code ...
+    create_requirements_file()
