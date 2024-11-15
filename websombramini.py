@@ -1,4 +1,4 @@
-import requests 
+import requests
 import socket
 import ssl
 import dns.resolver
@@ -8,13 +8,11 @@ import time
 import threading
 import re
 import nmap
-import pandas as pd
-import matplotlib.pyplot as plt
-from bs4 import BeautifulSoup
-import logging
 import sublist3r
 import argparse
 import pyfiglet
+from bs4 import BeautifulSoup
+import logging
 
 # Setup logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -175,66 +173,52 @@ class WebSombramini:
         except Exception as e:
             logging.error(f"[-] Error checking security headers: {e}")
 
+    def get_subdomains(self):
+        try:
+            if not self.domain:
+                logging.error("[-] Domain is not provided.")
+                return
+            
+            logging.info(f"[+] Fetching subdomains for domain: {self.domain}")
+            
+            subdomains = sublist3r.main(self.domain, 40, None, ports=None, silent=True, verbose=False, enable_bruteforce=False)
+            
+            with self.lock:
+                self.data['Subdomains'] = subdomains
+            
+            logging.info(f"[+] Subdomains: {len(subdomains)} found.")
+        
+        except Exception as e:
+            logging.error(f"[-] Error fetching subdomains: {e}")
+            with self.lock:
+                self.data['Subdomains'] = None
 
-def get_subdomains(self):
-    try:
-      
-        if not self.domain:
-            logging.error("[-] Domain is not provided.")
-            return
+    def scan_open_ports(self):
+        try:
+            scanner = nmap.PortScanner()
+            
+            ip_address = self.data.get('IP Address')
+            if not ip_address:
+                logging.error("[-] IP Address is not provided.")
+                return
+            
+            logging.info(f"[+] Scanning ports for IP: {ip_address}")
+            scanner.scan(ip_address, '1-1024')  # Scans ports 1 to 1024
+            
+            open_ports = []
+            if 'tcp' in scanner[ip_address]:
+                open_ports = [port for port in scanner[ip_address]['tcp'] if scanner[ip_address]['tcp'][port]['state'] == 'open']
+            
+            with self.lock:
+                self.data['Open Ports'] = open_ports
+            
+            logging.info("[+] Port scanning completed.")
+            logging.info(f"[+] Open Ports: {open_ports}")
         
-        
-        logging.info(f"[+] Fetching subdomains for domain: {self.domain}")
-        
-        
-        engines = ['dnsdumpster', 'virustotal']  # Kullanmak istediğiniz motorlar
-        subdomains = sublist3r.main(self.domain, 40, None, ports=None, silent=True, verbose=False, enable_bruteforce=False, engines=engines)
-        
-       
-        with self.lock:
-            self.data['Subdomains'] = subdomains
-        
-        logging.info(f"[+] Subdomains: {len(subdomains)} found.")
-    
-    except Exception as e:
-        logging.error(f"[-] Error fetching subdomains: {e}")
-        with self.lock:
-            self.data['Subdomains'] = None
+        except Exception as e:
+            logging.error(f"[-] Error performing port scan: {e}")
 
-
-import nmap
-import logging
-
-def scan_open_ports(self):
-    try:
-        scanner = nmap.PortScanner()
-        
-        ip_address = self.data.get('IP Address')
-        if not ip_address:
-            logging.error("[-] IP Address is not provided.")
-            return
-        
-      
-        logging.info(f"[+] Scanning ports for IP: {ip_address}")
-        scanner.scan(ip_address, '1-1024')  # Scans ports 1 to 1024
-        
-        
-        open_ports = []
-        if 'tcp' in scanner[ip_address]:
-            open_ports = [port for port in scanner[ip_address]['tcp'] if scanner[ip_address]['tcp'][port]['state'] == 'open']
-        
-      
-        with self.lock:
-            self.data['Open Ports'] = open_ports
-        
-        logging.info("[+] Port scanning completed.")
-        logging.info(f"[+] Open Ports: {open_ports}")
-    
-    except Exception as e:
-        logging.error(f"[-] Error performing port scan: {e}")
-
-
-def save_data(self):
+    def save_data(self):
         try:
             with open(f"{self.domain}_analysis.json", "w") as json_file:
                 json.dump(self.data, json_file, indent=4)
@@ -242,31 +226,24 @@ def save_data(self):
         except Exception as e:
             logging.error(f"[-] Error saving data: {e}")
 
-def run_analysis(self):
-        logging.info(f"[+] Starting analysis for {self.domain}")
-        threads = [
-            threading.Thread(target=self.get_ip_address),
-            threading.Thread(target=self.get_dns_records),
-            threading.Thread(target=self.get_ssl_info_detailed),
-            threading.Thread(target=self.scrape_website),
-            threading.Thread(target=self.scrape_php_files),  # Added PHP file scraping
-            threading.Thread(target=self.get_whois_info),
-            threading.Thread(target=self.check_security_headers),
-            threading.Thread(target=self.get_subdomains),
-            threading.Thread(target=self.scan_open_ports)
-        ]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+    def run_analysis(self):
+        self.display_banner()
+        self.get_ip_address()
+        self.get_dns_records()
+        self.get_ssl_info_detailed()
+        self.scrape_website()
+        self.scrape_php_files()
+        self.get_whois_info()
+        self.check_security_headers()
+        self.get_subdomains()
+        self.scan_open_ports()
         self.save_data()
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("domain", help="Enter the domain you want to analyze (e.g., example.com)")
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Web Analysis and Recon Tool")
+    parser.add_argument('domain', type=str, help='The domain name to analyze')
     args = parser.parse_args()
     
-    WebSombramini.display_banner()
-    analysis = WebSombramini(args.domain)
-    analysis.run_analysis()
+    web_sombra = WebSombramini(args.domain)
+    web_sombra.run_analysis()
