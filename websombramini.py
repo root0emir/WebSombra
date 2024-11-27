@@ -44,7 +44,7 @@ class WebSombramini:
 
     @staticmethod
     def display_banner():
-        banner = pyfiglet.figlet_format("WebSombraMini")
+        banner = pyfiglet.figlet_format("WebSombra")
         print(banner)
         print("Web Analysis and Recon Tool\n")
         print("Developed by [root0emir]")
