@@ -5,7 +5,7 @@ Please remember to install the dependencies listed in the requirements.txt file.
 
  You can run it using the command: 
  
- git clone https://github.com/root0emir/WebSombraMini.git
+ git clone https://github.com/root0emir/WebSombra.git
  
  cd WebSombra
  
